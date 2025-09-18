@@ -4,6 +4,7 @@ import com.jyjun.simplemarket2.core.security.MemberDetails;
 import com.jyjun.simplemarket2.core.support.JWTUtil;
 import com.jyjun.simplemarket2.domain.member.entity.Member;
 import com.jyjun.simplemarket2.domain.member.enumeration.MemberRole;
+import com.jyjun.simplemarket2.persistence.member.repo.MemberRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,12 +17,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
+    private MemberRepository memberRepo;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -47,28 +50,25 @@ public class JWTFilter extends OncePerRequestFilter {
                 return;
             }
 
-            log.info("JWTFilter 50: ");
+            if (!jwtUtil.getTokenType(token).equals("access")) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "올바른 토큰이 아닙니다.");
+                return;
+            }
 
-            log.info("JWTFilter 52: " + jwtUtil.getRole(token));
+            log.info("JWTFilter 50: ");
 
             // JWT에서 사용자 정보 추출
             String userId = jwtUtil.getUsername(token);
-            MemberRole role = MemberRole.valueOf(jwtUtil.getRole(token));
-
-            log.info("JWTFilter 56: " + role);
-
-            log.info(role.name());
+            MemberRole userRole = MemberRole.valueOf(jwtUtil.getRole(token));
 
             // 인증 객체 생성
-            Member member = Member.builder()
+            Member dummyMember = Member.builder()
                     .id(userId)
-                    .password("N/A") // 비밀번호는 JWT 기반 인증이므로 사용하지 않음
-                    .role(role)
+                    .password("N/A")
+                    .role(userRole)
                     .build();
-
-            log.info("JWTFilter 67: " + member.getRole());
-
-            MemberDetails memberDetails = new MemberDetails(member);
+            
+            MemberDetails memberDetails = new MemberDetails(dummyMember);
             Authentication authToken = new UsernamePasswordAuthenticationToken(memberDetails, null, memberDetails.getAuthorities());
 
             // SecurityContext에 인증 정보 저장 (STATLESS 모드이므로 요청 종료 시 소멸)

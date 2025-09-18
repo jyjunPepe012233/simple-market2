@@ -23,4 +23,7 @@ springdoc:
     operationsSorter: method
     path: /swagger-ui.html
 jwt:
+  expiration:
+    access: 1800000 # 30 * 60 * 1000, 30 minute
+    refresh: 259200000 # 3 * 24 * 60 * 60 * 1000, 3 day
   secret: ${JWT_SECRET}

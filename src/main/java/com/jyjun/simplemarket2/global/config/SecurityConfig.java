@@ -1,7 +1,6 @@
 package com.jyjun.simplemarket2.global.config;
 
 import com.jyjun.simplemarket2.core.support.JWTUtil;
-import com.jyjun.simplemarket2.domain.member.enumeration.MemberRole;
 import com.jyjun.simplemarket2.global.filter.JWTFilter;
 import com.jyjun.simplemarket2.global.filter.LoginFilter;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -73,6 +71,10 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        LoginFilter loginFilter = new LoginFilter(authenticationManager(), jwtUtil);
+        loginFilter.setFilterProcessesUrl("/auth/login");
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정 적용
                 .csrf(csrf -> csrf.disable()) // JWT 사용 시 CSRF 보호 비활성화

@@ -6,7 +6,6 @@ import com.jyjun.simplemarket2.core.support.JWTUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -79,17 +78,18 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority authority = iterator.next();
-
         String role = authority.getAuthority();
-        String token = jwtUtil.createJwt(username, role, 3 * 60 * 1000L); // 3분 유효 토큰 생성
+
+        String refreshToken = jwtUtil.createRefreshToken(username, role);
+        String accessToken = jwtUtil.createAccessToken(username, role);
 
         // 응답 타입 JSON으로 지정
         res.setContentType("application/json");
         res.setCharacterEncoding("UTF-8");
 
         // JSON 형태로 응답 작성
-        String responseBody = "{ \"accessToken\": \"" + token + "\" }";
-        res.getWriter().write(responseBody);
+        res.getWriter().write("{ \"refreshToken\": \"" + refreshToken + "\" }");
+        res.getWriter().write("{ \"accessToken\": \"" + accessToken + "\" }");
     }
 
     /**
