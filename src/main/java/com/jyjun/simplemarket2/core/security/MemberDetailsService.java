@@ -20,8 +20,6 @@ public class MemberDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        log.info("MemberDetailsService: 23");
-
         try {
             Optional<Member> memberOptional = memberRepo.findById(username);
 
@@ -29,12 +27,9 @@ public class MemberDetailsService implements UserDetailsService {
                 return new UsernameNotFoundException("MemberDetailsService에서 사용자를 찾을 수 없습니다: " + username);
             });
 
-            log.info("MemberDetailsService: 23" + member.getId());
-
             return new MemberDetails(member);
 
         } catch (Exception e) {
-            log.info("MemberDetailService: 30 " + e.getMessage());
             throw new UsernameNotFoundException("MemberDetailsService에서 사용자를 찾을 수 없습니다: " + username);
         }
     }

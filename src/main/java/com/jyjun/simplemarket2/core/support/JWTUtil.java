@@ -66,14 +66,6 @@ public class JWTUtil {
      * JWT 만료 여부 확인
      */
     public Boolean isTokenExpired(String token) {
-
-        log.info(String.valueOf(Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getPayload()
-                .getExpiration()) + " expired " + String.valueOf(new Date()));
-
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()

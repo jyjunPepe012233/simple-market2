@@ -39,7 +39,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
      */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException {
-
         if (!req.getMethod().equals("POST")) {
             throw new AuthenticationServiceException("Authentication method not supported: " + req.getMethod());
         }
@@ -54,8 +53,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
             UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(loginReq.username(), loginReq.password());
 
-            log.info("username: " + loginReq.username() + " password: " + loginReq.password());
-
             return this.authenticationManager.authenticate(authRequest);
 
         } catch (Exception e) {
@@ -69,7 +66,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
      */
     @Override
     protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain, Authentication auth) throws IOException {
-        log.info("46: ");
 
         MemberDetails customUserDetails = (MemberDetails) auth.getPrincipal();
         String username = customUserDetails.getUsername();
@@ -97,7 +93,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
      */
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest req, HttpServletResponse res, AuthenticationException failed) {
-        log.info("LoginFilter 64: ");
         res.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized 응답
     }
 }

@@ -34,14 +34,11 @@ public class JWTFilter extends OncePerRequestFilter {
 
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
-            log.info("JWTFilter 34: ");
             return;
         }
 
         // "Bearer " 이후의 토큰 값만 추출
         String token = authorizationHeader.substring(7);
-
-        log.info("JWTFilter 41: " + token);
 
         try {
             // JWT 만료 여부 검증
@@ -54,8 +51,6 @@ public class JWTFilter extends OncePerRequestFilter {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "올바른 토큰이 아닙니다.");
                 return;
             }
-
-            log.info("JWTFilter 50: ");
 
             // JWT에서 사용자 정보 추출
             String userId = jwtUtil.getUsername(token);
@@ -77,7 +72,7 @@ public class JWTFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            log.error("JWT 필터 처리 중 오류 발생: {}", e.getMessage(), e);
+            log.error("JWT 필터 처리 중 오류 발생: ", e.getMessage(), e);
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 토큰입니다.");
         }
 
