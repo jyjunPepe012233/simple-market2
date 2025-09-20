@@ -1,7 +1,9 @@
 package com.jyjun.simplemarket2.global.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jyjun.simplemarket2.core.support.JWTUtil;
-import com.jyjun.simplemarket2.global.filter.JWTFilter;
+import com.jyjun.simplemarket2.core.support.RedisUtil;
+import com.jyjun.simplemarket2.global.filter.JWTAuthorizationFilter;
 import com.jyjun.simplemarket2.global.filter.LoginFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
+    private final RedisUtil redisUtil;
 
     /**
      * Spring Security의 AuthenticationManager를 빈으로 등록
@@ -72,7 +75,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        LoginFilter loginFilter = new LoginFilter(authenticationManager(), jwtUtil);
+        LoginFilter loginFilter = new LoginFilter(authenticationManager(), jwtUtil, redisUtil, new ObjectMapper());
         loginFilter.setFilterProcessesUrl("/auth/login");
 
         http
@@ -83,15 +86,16 @@ public class SecurityConfig {
 
                 // 엔드포인트별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers( "/member/signup").permitAll() // 로그인, 회원가입, 홈은 누구나 접근 가능
-                        .requestMatchers("/login", "/").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // PERMIT SWAGGER API USING
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/member/signup").permitAll()
+                        .requestMatchers("/auth/login", "/auth/reissue").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         .anyRequest().authenticated()) // 그 외의 요청은 인증된 사용자만 접근 가능
 
-                .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JWTAuthorizationFilter(jwtUtil, redisUtil), UsernamePasswordAuthenticationFilter.class)
 
-                .addFilterAt(new LoginFilter(authenticationManager(), jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // 세션을 사용하지 않음 (JWT 기반 인증이므로 STATELESS 모드 설정)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

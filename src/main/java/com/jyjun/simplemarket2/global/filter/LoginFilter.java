@@ -3,9 +3,11 @@ package com.jyjun.simplemarket2.global.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jyjun.simplemarket2.core.security.MemberDetails;
 import com.jyjun.simplemarket2.core.support.JWTUtil;
+import com.jyjun.simplemarket2.core.support.RedisUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -22,17 +24,13 @@ import java.util.Collection;
 import java.util.Iterator;
 
 @Slf4j
+@RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
+    private final RedisUtil redisUtil;
     private final ObjectMapper objectMapper;
-
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-        this.objectMapper = new ObjectMapper();
-    }
 
     /**
      * 로그인 요청 시 사용자 인증 처리
@@ -78,6 +76,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String refreshToken = jwtUtil.createRefreshToken(username, role);
         String accessToken = jwtUtil.createAccessToken(username, role);
+
+        redisUtil.saveRefreshToken(username, refreshToken);
 
         // 응답 타입 JSON으로 지정
         res.setContentType("application/json");

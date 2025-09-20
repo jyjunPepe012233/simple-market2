@@ -17,9 +17,7 @@ public class AuthController {
 
     @GetMapping("/reissue")
     public ResponseEntity<ReissueRes> reissue(@RequestBody @Valid ReissueReq req) {
-        return ResponseEntity.ok(
-                ReissueRes.of(authUseCase.reissueAccessToken(req))
-        );
+        return ResponseEntity.ok(authUseCase.reissue(req));
     }
 
 }

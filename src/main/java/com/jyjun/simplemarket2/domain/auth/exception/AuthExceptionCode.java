@@ -7,8 +7,10 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum AuthExceptionCode implements CustomExceptionCode {
 
-    TOKEN_INVALID(HttpStatus.BAD_REQUEST, "잘못된 토큰"),
-    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "만료된 토큰")
+    BAD_TOKEN(HttpStatus.BAD_REQUEST, "잘못된 토큰"),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "만료된 토큰"),
+    TOKEN_USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "없는 사용자"),
+    TOKEN_AUTHORITY_MISMATCH(HttpStatus.FORBIDDEN, "권한 불일치"),
     ;
 
     private final HttpStatus status;

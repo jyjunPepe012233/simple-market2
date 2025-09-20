@@ -2,6 +2,7 @@ package com.jyjun.simplemarket2.core.support;
 
 import com.jyjun.simplemarket2.domain.member.enumeration.MemberRole;
 import io.jsonwebtoken.Jwts;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -10,10 +11,14 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
 public class JWTUtil {
+
+    public static final String REFRESH_TOKEN_TYPE = "refresh";
+    public static final String ACCESS_TOKEN_TYPE = "access";
 
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
@@ -30,6 +35,23 @@ public class JWTUtil {
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
         this.accessTokenExpiration = accessTokenExpiration;
         this.refreshTokenExpiration = refreshTokenExpiration;
+    }
+
+    public String getJwtFromHttpRequest(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        return authorizationHeader.substring(7);
+    }
+
+    public String getJti(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getPayload()
+                .get("jti", String.class);
     }
 
     /**
@@ -59,7 +81,7 @@ public class JWTUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getPayload()
-                .get("tokentype", String.class);
+                .get("type", String.class);
     }
 
     /**
@@ -76,16 +98,19 @@ public class JWTUtil {
     }
 
     public String createAccessToken(String username, String role) {
-        return createToken(username, role,"access", accessTokenExpiration);
+        return createToken(username, role, ACCESS_TOKEN_TYPE, accessTokenExpiration);
     }
 
     public String createRefreshToken(String username, String role) {
-        return createToken(username, role, "refresh", refreshTokenExpiration);
+        return createToken(username, role, REFRESH_TOKEN_TYPE, refreshTokenExpiration);
     }
 
     public String createToken(String username, String role, String tokenType, Long expiredMs) {
+        log.info(new Date(System.currentTimeMillis()).toString());
+        log.info(new Date(System.currentTimeMillis() + expiredMs).toString());
         return Jwts.builder()
-                .claim("tokentype", tokenType)
+                .id(UUID.randomUUID().toString())
+                .claim("type", tokenType)
                 .claim("username", username)
                 .claim("role", role)
                 .issuedAt(new Date(System.currentTimeMillis())) // 발급 시간
